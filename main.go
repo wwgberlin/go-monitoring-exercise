@@ -10,6 +10,7 @@ import (
 )
 
 // Task:
+// If you are here it means you already have prometheus installed
 // Add a promhttp.Handler() to the endpoint "/metrics/"
 // just before the call to ListenAndServe.
 // Checkout 127.0.0.1:8080/metrics.
@@ -41,13 +42,6 @@ type demoAPI struct {
 // grafana dashboard
 
 func background(registerer prometheus.Registerer) {
-	vec := prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "background_task_results",
-		Help: "Background task results",
-	}, []string{"results"})
-
-	registerer.MustRegister(vec)
-
 	for {
 		ch := make(chan string)
 		go func() {
@@ -56,9 +50,7 @@ func background(registerer prometheus.Registerer) {
 		select {
 		case str := <-ch:
 			log.Println(str)
-			vec.WithLabelValues("success").Add(1)
 		case <-time.After(time.Millisecond * 50):
-			vec.WithLabelValues("failed").Add(1)
 			log.Println("gave up!")
 		}
 		time.Sleep(1 * time.Second)
