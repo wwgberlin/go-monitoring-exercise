@@ -22,12 +22,7 @@ import (
 func main() {
 	reg := prometheus.DefaultRegisterer
 
-	go func() {
-		for {
-			background(reg)
-			time.Sleep(1 * time.Second)
-		}
-	}()
+	go background(reg)
 
 	newDemoAPI(reg).register(http.DefaultServeMux)
 
@@ -41,6 +36,13 @@ type demoAPI struct {
 // Task:
 
 // this function receives a prometheus Registerer.
+
+// Add a prometheus Counter (not vector) to count the total runs
+// using prometheus.NewCounter
+// Name: background_total_runs
+// register it to the registerer
+// look at the grafana dashboard
+
 // create a prometheus Counter vector using prometheus.NewCounterVec:
 // with the name "background_task_results"
 // with the labels ["results"].
@@ -49,20 +51,24 @@ type demoAPI struct {
 // Do not forget to register your vector to the prometheus registerer to
 // see the results in the grafana dashboard
 
-// Task (advanced): This function also has a go routine leak, fix the leak
+// Task (advanced):
+// This function also has a go routine leak, fix the leak
 // to see that the number of goroutines remains ~constant in the
 // grafana dashboard
 
 func background(registerer prometheus.Registerer) {
-	ch := make(chan string)
-	go func() {
-		ch <- foo()
-	}()
-	select {
-	case str := <-ch:
-		log.Println(str)
-	case <-time.After(time.Millisecond * 50):
-		log.Println("gave up!")
+	for {
+		ch := make(chan string)
+		go func() {
+			ch <- foo()
+		}()
+		select {
+		case str := <-ch:
+			log.Println(str)
+		case <-time.After(time.Millisecond * 50):
+			log.Println("gave up!")
+		}
+		time.Sleep(1 * time.Second)
 	}
 
 }
