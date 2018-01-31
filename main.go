@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Task:
@@ -31,8 +30,6 @@ func main() {
 	}()
 
 	newDemoAPI(reg).register(http.DefaultServeMux)
-
-	http.Handle("/metrics/", promhttp.Handler())
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -90,8 +87,8 @@ func newDemoAPI(reg prometheus.Registerer) *demoAPI {
 // inside this function we declared another anonymous function called instr
 // Wrap the call to fn(w,r) with timestamps to obtain the time it took to
 // call fn (time.Now() and time.Since() are your friends).
-// Then call WithLabelValues(endpoint) and Observe to send the time it took
-// to execute fn() to prometheus.
+// Then call a.requestDurations.WithLabelValues(endpoint).Observe(duration) to
+// send the time it took to execute fn() to prometheus.
 func (a demoAPI) register(mux *http.ServeMux) {
 	instr := func(endpoint string, fn http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
